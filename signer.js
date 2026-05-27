@@ -10,24 +10,24 @@ function extractCertInfo(p12Buffer, password) {
     const p12Der = forge.util.decode64(p12Buffer.toString("base64"));
     const p12Asn1 = forge.asn1.fromDer(p12Der);
     const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, password);
-    
+
     const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
     const certBagList = certBags[forge.pki.oids.certBag];
-    
+
     if (!certBagList || certBagList.length === 0) throw new Error("Sin certificados");
-    
+
     const cert = certBagList[0].cert;
-    
+
     let commonName = "Firmante";
     let issuerName = "Emisor";
     let serialNumber = cert.serialNumber || "";
-    
+
     const cnField = cert.subject.getField("CN");
     if (cnField) commonName = cnField.value;
-    
+
     const issuerCnField = cert.issuer.getField("CN");
     if (issuerCnField) issuerName = issuerCnField.value;
-    
+
     return { commonName, issuerName, serialNumber };
   } catch (err) {
     throw new Error("Contraseña incorrecta o archivo P12 inválido");
@@ -37,23 +37,23 @@ function extractCertInfo(p12Buffer, password) {
 async function signElectronicDocument({ pdfBuffer, p12Buffer, password, posX, posY }) {
   // 1. Extraer datos para el sello visual
   const { commonName, issuerName, serialNumber } = extractCertInfo(p12Buffer, password);
-  
+
   // 2. Cargar PDF
   const pdfDoc = await PDFDocument.load(pdfBuffer);
   const pages = pdfDoc.getPages();
   const page = pages[0]; // Estampar en primera página
   const { width: pageWidth, height: pageHeight } = page.getSize();
-  
+
   const stampWidth = 180;
   const stampHeight = 85;
   const x = (posX / 100) * (pageWidth - stampWidth);
   const y = (posY / 100) * (pageHeight - stampHeight);
-  
+
   const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  
+
   const rawDateString = new Date().toLocaleString("es-EC", { timeZone: "America/Guayaquil" })
-                         .replace(/\u202f/g, " ").replace(/\u00a0/g, " ");
+    .replace(/\u202f/g, " ").replace(/\u00a0/g, " ");
 
   // 3. Dibujar estampa sin bordes
   page.drawText("FIRMADO DIGITALMENTE", { x: x + 4, y: y + stampHeight - 16, size: 8.5, font: helveticaBoldFont, color: rgb(0.12, 0.44, 0.73) });
@@ -70,14 +70,15 @@ async function signElectronicDocument({ pdfBuffer, p12Buffer, password, posX, po
     location: "Ecuador",
     contactInfo: commonName,
     name: commonName,
+    signatureLength: 32768, // <-- Aumentamos el tamaño del placeholder para firmas pesadas
   });
-  
+
   const pdfWithPlaceholder = Buffer.from(await pdfDoc.save());
-  
+
   // 5. Inyectar firma CMS/PKCS#7 matemáticamente verificable
   const signer = new P12Signer(p12Buffer, { passphrase: password });
   const signedPdf = await signpdf.sign(pdfWithPlaceholder, signer);
-  
+
   return signedPdf;
 }
 
