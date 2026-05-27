@@ -1,7 +1,7 @@
 const { PDFDocument, rgb, StandardFonts } = require("pdf-lib");
 const signpdf = require("@signpdf/signpdf").default;
 const { P12Signer } = require("@signpdf/signer-p12");
-const { plainAddPlaceholder } = require("@signpdf/placeholder-pdf-lib");
+const { pdflibAddPlaceholder } = require("@signpdf/placeholder-pdf-lib");
 const forge = require("node-forge");
 
 // Extraer info real del P12 para la estampa
@@ -64,7 +64,7 @@ async function signElectronicDocument({ pdfBuffer, p12Buffer, password, posX, po
   page.drawText(`Firma Electrónica (Ecuador)`, { x: x + 4, y: y + stampHeight - 76, size: 6.5, font: helveticaBoldFont, color: rgb(0.0, 0.5, 0.2) });
 
   // 4. Agregar Placeholder para la firma criptográfica (esencial para node-signpdf)
-  plainAddPlaceholder({
+  pdflibAddPlaceholder({
     pdfDoc,
     reason: "Firma Electrónica",
     location: "Ecuador",
