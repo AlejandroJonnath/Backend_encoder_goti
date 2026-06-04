@@ -41,14 +41,15 @@ function extractCertInfo(p12Buffer, password) {
 }
 
 // Función principal que toma el PDF y el P12, agrega el sello visual y la firma criptográfica, y devuelve el PDF firmado como Buffer
-async function signElectronicDocument({ pdfBuffer, p12Buffer, password, posX, posY }) {
+async function signElectronicDocument({ pdfBuffer, p12Buffer, password, posX, posY, pageNumber = 1 }) {
   // 1. Extraer datos para el sello visual
   const { commonName, issuerName, serialNumber } = extractCertInfo(p12Buffer, password); // Llamamos a la función anterior para obtener los datos legibles del certificado; si la contraseña es incorrecta aquí se lanzará el error
 
   // 2. Cargar PDF
   const pdfDoc = await PDFDocument.load(pdfBuffer); // Cargamos el PDF desde su buffer binario para poder manipularlo con pdf-lib
   const pages = pdfDoc.getPages(); // Obtenemos el array de todas las páginas del documento
-  const page = pages[0]; // Estampar en primera página; tomamos solo la primera página para dibujar el sello visual ahí
+  const pageIndex = Math.max(0, Math.min(pageNumber - 1, pages.length - 1)); // Calculamos el índice seguro (0-based) asegurándonos de que no se salga de los límites
+  const page = pages[pageIndex]; // Tomamos la página seleccionada por el usuario para dibujar el sello visual ahí
   const { width: pageWidth, height: pageHeight } = page.getSize(); // Obtenemos las dimensiones de la página en puntos (unidad de medida de PDF; 1 punto = 1/72 pulgadas) para poder calcular posiciones relativas
 
   const stampWidth = 180; // Ancho del sello visual en puntos PDF

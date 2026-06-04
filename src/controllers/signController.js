@@ -14,6 +14,7 @@ const signDocument = async (req, res) => {
     const password = req.body.password; // La contraseña del certificado P12 llega como un campo de texto normal del formulario (no como archivo); la necesitamos para desencriptar la clave privada del certificado
     const posX = parseFloat(req.body.posX) || 70; // Posición horizontal del sello visual en la página, expresada como porcentaje (0 a 100); si no se envía usamos 70 como valor por defecto
     const posY = parseFloat(req.body.posY) || 10; // Posición vertical del sello visual en la página, expresada como porcentaje (0 a 100); si no se envía usamos 10 como valor por defecto (parte inferior de la página)
+    const pageNumber = parseInt(req.body.pageNumber) || 1; // Número de página (1-indexed) donde se estampará el sello visual
 
     if (!pdf || !p12 || !password) {
       return res.status(400).json({ error: "Faltan archivos (pdf, p12) o contraseña." }); // Si falta cualquiera de los tres elementos obligatorios rechazamos la petición con un error 400 (Bad Request) antes de intentar firmar; sin los tres elementos es imposible completar el proceso
@@ -25,7 +26,8 @@ const signDocument = async (req, res) => {
       p12Buffer: p12[0].buffer, // El contenido binario del certificado P12 del firmante (también un Buffer con los bytes del archivo .p12)
       password, // La contraseña del certificado P12 necesaria para extraer la clave privada que hace la firma criptográfica
       posX, // Coordenada X para posicionar el sello visual en el PDF
-      posY // Coordenada Y para posicionar el sello visual en el PDF
+      posY, // Coordenada Y para posicionar el sello visual en el PDF
+      pageNumber // Número de página donde colocar el sello (1-indexed)
     });
 
     res.setHeader("Content-Type", "application/pdf"); // Le indicamos al cliente que el cuerpo de la respuesta es un archivo PDF en formato binario
