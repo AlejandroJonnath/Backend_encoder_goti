@@ -12,7 +12,7 @@ async function detectAI(text) {
   if (!apiKey) throw new Error("GEMINI_API_KEY no configurada en .env");
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   // Tomamos una muestra representativa (primeros 4000 chars) para el análisis
   const sample = text.substring(0, 4000);
@@ -57,8 +57,8 @@ async function detectPlagiarism(text) {
   if (!apiKey) throw new Error("GEMINI_API_KEY no configurada en .env");
 
   const genAI = new GoogleGenerativeAI(apiKey);
-  // Usamos gemini-1.5-pro porque tiene una base de datos más amplia para reconocer fuentes
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+  // Usamos gemini-2.0-flash con base de datos amplia para reconocer fuentes
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const sample = text.substring(0, 4000);
 
