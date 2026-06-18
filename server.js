@@ -7,6 +7,7 @@ require("dotenv").config(); // Cargar variables de entorno desde el archivo .env
 const cors = require("cors"); // CORS (Cross-Origin Resource Sharing) permite que el frontend (que corre en otro dominio o puerto) pueda hacer peticiones a este servidor sin que el navegador las bloquee por seguridad
 const fs = require("fs"); // Módulo nativo de Node para trabajar con el sistema de archivos (leer, escribir, borrar archivos y carpetas)
 const app = express(); // Creamos la instancia principal de la aplicación Express, todo lo que configuremos sobre "app" define el comportamiento del servidor
+app.set("trust proxy", 1); // Confía en el proxy de Render para que req.protocol devuelva "https" correctamente
 app.use(cors()); // Activamos CORS de manera global para que todas las rutas del servidor acepten peticiones de cualquier origen (importante para la app móvil Expo)
 
 const signRoutes = require("./src/routes/signRoutes"); // Importamos el enrutador que contiene todas las rutas relacionadas con la firma electrónica de documentos PDF
