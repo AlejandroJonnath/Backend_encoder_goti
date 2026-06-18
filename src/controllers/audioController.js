@@ -30,8 +30,9 @@ const generateAudioBook = async (req, res) => {
     fs.unlink(inputPath, () => {});
     inputPath = null;
 
-    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
-    const baseUrl = protocol + "://" + req.get("host");
+    const host = req.get("host") || "";
+    const protocol = (host.includes("localhost") || host.includes("192.168.")) ? req.protocol : "https";
+    const baseUrl = `${protocol}://${host}`;
     res.json({ url: `${baseUrl}/uploads/${outputFilename}` });
 
     // Limpiamos después de 30 minutos (el archivo es grande, el usuario necesita más tiempo)
