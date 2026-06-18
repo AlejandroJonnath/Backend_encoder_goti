@@ -38,6 +38,11 @@ const compressPDFService = (inputPath, outputPath) => {
       "-sDEVICE=pdfwrite", // Le decimos a Ghostscript que el dispositivo de salida (formato de salida) es PDF
       "-dCompatibilityLevel=1.4", // Establecemos la versión de compatibilidad del PDF de salida en 1.4 (compatible con prácticamente todos los lectores de PDF)
       "-dPDFSETTINGS=/screen", // Nivel de compresión máximo; "/screen" optimiza para pantalla reduciendo imágenes a 72dpi y comprimiendo fuentes agresivamente (ideal para bajar de 150MB a unos pocos MB)
+      "-dColorImageDownsampleType=/Subsample", // OPTIMIZACIÓN: Acelera enormemente la compresión usando subsample en lugar de bicubic
+      "-dGrayImageDownsampleType=/Subsample", // OPTIMIZACIÓN: Igual para imágenes en escala de grises
+      "-dMonoImageDownsampleType=/Subsample", // OPTIMIZACIÓN: Igual para imágenes monocromáticas
+      "-dColorConversionStrategy=/LeaveColorUnchanged", // OPTIMIZACIÓN: Evita conversiones de perfil de color pesadas que toman mucho tiempo
+      "-dNumRenderingThreads=4", // OPTIMIZACIÓN: Usa múltiples hilos de CPU para acelerar
       "-dNOPAUSE", // Le decimos a Ghostscript que no pause ni pida confirmación entre páginas durante el procesamiento
       "-dQUIET", // Suprime la mayor parte de los mensajes de salida de Ghostscript para que no llenen los logs del servidor con información irrelevante
       "-dBATCH", // Indica que Ghostscript debe salir automáticamente cuando termine de procesar, sin esperar input del usuario (esencial para procesos automáticos)
