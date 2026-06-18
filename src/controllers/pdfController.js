@@ -25,7 +25,8 @@ const compressPDF = async (req, res) => {
     fs.unlink(inputPath, () => {}); // Borramos el archivo original que subió el usuario del disco tan pronto como Ghostscript termina de procesarlo; ya no necesitamos el original porque el comprimido es el que le vamos a entregar al cliente; el callback vacío () => {} hace que los errores de borrado (si los hay) se ignoren silenciosamente sin romper el flujo
 
     // Devolvemos la URL para que el cliente lo descargue
-    const baseUrl = req.protocol + "://" + req.get("host"); // Construimos la URL base del servidor (ejemplo: "https://backend-encoder-goti.onrender.com") usando el protocolo (http/https) y el host de la petición entrante; de esta forma la URL funciona tanto en desarrollo local como en producción
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const baseUrl = protocol + "://" + req.get("host"); // Construimos la URL base del servidor (ejemplo: "https://backend-encoder-goti.onrender.com") usando el protocolo (http/https) y el host de la petición entrante; de esta forma la URL funciona tanto en desarrollo local como en producción
     const fileUrl = `${baseUrl}/uploads/${outputFilename}`; // Construimos la URL completa donde el cliente puede descargar el PDF comprimido (ejemplo: "https://backend-encoder-goti.onrender.com/uploads/compressed_1717000000000_pdf-xxx.pdf")
 
     res.json({ url: fileUrl }); // Respondemos al cliente con un JSON que contiene la URL de descarga; el frontend hará un downloadAsync a esa URL para guardar el archivo en el dispositivo del usuario
@@ -61,7 +62,8 @@ const mergePDF = async (req, res) => {
     inputPaths.forEach(p => fs.unlink(p, () => {})); // Borramos cada uno de los archivos de entrada del disco tan pronto como la unión termina; ya no son necesarios porque el PDF unido es el producto final
 
     // Devolvemos la URL para que el cliente lo descargue
-    const baseUrl = req.protocol + "://" + req.get("host"); // Construimos la URL base del servidor igual que en compressPDF
+    const protocol = req.headers["x-forwarded-proto"] || req.protocol;
+    const baseUrl = protocol + "://" + req.get("host"); // Construimos la URL base del servidor igual que en compressPDF
     const fileUrl = `${baseUrl}/uploads/${outputFilename}`; // URL completa para descargar el PDF unido
 
     res.json({ url: fileUrl }); // Enviamos la URL al frontend para que lo descargue en el dispositivo del usuario
