@@ -7,7 +7,7 @@
 const express = require("express"); // Express es el framework web del servidor; lo necesitamos aquí para crear un Router independiente (un mini-servidor de rutas que luego server.js monta bajo /api/pdf)
 const router = express.Router(); // Router nos permite definir rutas en un archivo separado sin tener que tenerlas todas en server.js; server.js luego monta este router bajo el prefijo /api/pdf
 const { diskUpload } = require("../middlewares/upload"); // Importamos la configuración de Multer con almacenamiento en disco; la usamos aquí porque compress y merge trabajan con archivos grandes que no caben bien en memoria RAM
-const { compressPDF, mergePDF } = require("../controllers/pdfController"); // Importamos los dos controladores que contienen la lógica para comprimir y unir PDFs
+const { compressPDF, mergePDF, extractText } = require("../controllers/pdfController"); // Importamos los controladores que contienen la lógica para comprimir, unir y extraer texto de PDFs
 
 router.post(
   "/compress", // Ruta completa cuando está montado en server.js: POST /api/pdf/compress; el cliente llama aquí para comprimir un PDF
@@ -19,6 +19,12 @@ router.post(
   "/merge", // Ruta completa: POST /api/pdf/merge; el cliente llama aquí para unir varios PDFs en uno
   diskUpload.fields([{ name: "pdfs", maxCount: 20 }]), // permitimos hasta 20 PDFs a la vez; Multer espera uno o más archivos en el campo "pdfs" (nombre en plural porque son múltiples); los guarda todos en disco antes de llegar al controlador
   mergePDF // Función controladora que valida que llegaron al menos 2 archivos, los manda a unir con Ghostscript y responde con la URL del PDF resultante
+);
+
+router.post(
+  "/extract-text", // Ruta completa: POST /api/pdf/extract-text; extrae texto plano con pdf-parse localmente a costo $0
+  diskUpload.fields([{ name: "pdf", maxCount: 1 }]),
+  extractText
 );
 
 module.exports = router; // Exportamos el router para que server.js lo pueda importar y montar bajo el prefijo /api/pdf

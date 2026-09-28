@@ -6,6 +6,7 @@
 const fs = require("fs"); // fs se usa para borrar los archivos temporales del disco una vez que ya no son necesarios (tanto los archivos de entrada como los de salida)
 const path = require("path"); // path se usa para construir la ruta absoluta donde se guardará el PDF procesado dentro de la carpeta uploads
 const { compressPDFService, mergePDFService } = require("../services/pdfService"); // Importamos las dos funciones del servicio de Ghostscript; compressPDFService comprime un PDF y mergePDFService une varios en uno
+const { extractTextFromPDF } = require("../services/pdfExtractor"); // Importamos el extractor local gratuito basado en pdf-parse
 
 // Controlador que maneja la petición POST /api/pdf/compress; recibe un PDF del cliente, lo comprime con Ghostscript y responde con la URL del archivo comprimido
 const compressPDF = async (req, res) => {
@@ -84,9 +85,41 @@ const mergePDF = async (req, res) => {
   }
 };
 
+// Controlador que maneja la petición POST /api/pdf/extract-text; recibe un PDF, extrae su texto con pdf-parse localmente y lo devuelve sin requerir APIs externas pagas
+const extractText = async (req, res) => {
+  let inputPath = null;
+  try {
+    if (!req.files || !req.files.pdf || req.files.pdf.length === 0) {
+      return res.status(400).json({ error: "No se proporcionó ningún archivo PDF." });
+    }
+
+    const file = req.files.pdf[0];
+    inputPath = file.path;
+
+    const result = await extractTextFromPDF(inputPath);
+
+    // Borramos el archivo temporal inmediatamente
+    fs.unlink(inputPath, () => {});
+    inputPath = null;
+
+    res.json({
+      text: result.text,
+      pages: result.numpages,
+      info: result.info,
+    });
+  } catch (error) {
+    console.error("Error al extraer texto del PDF:", error);
+    if (inputPath) {
+      fs.unlink(inputPath, () => {});
+    }
+    res.status(500).json({ error: error.message || "Error interno al extraer texto del PDF." });
+  }
+};
+
 module.exports = {
   compressPDF, // Exportamos el controlador de compresión para que pdfRoutes.js lo pueda asignar a la ruta POST /compress
-  mergePDF // Exportamos el controlador de unión para que pdfRoutes.js lo pueda asignar a la ruta POST /merge
+  mergePDF, // Exportamos el controlador de unión para que pdfRoutes.js lo pueda asignar a la ruta POST /merge
+  extractText // Exportamos el controlador de extracción de texto gratuito
 };
 
 // si quitas compressPDF pasa que la ruta POST /api/pdf/compress no tendrá controlador y Express lanzará un error al intentar registrar la ruta en pdfRoutes.js,
